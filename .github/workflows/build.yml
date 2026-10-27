@@ -1,68 +1,26 @@
-name: Build APK
-on: [push]
+name: Build App
+on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-      - run: mkdir -p app/src/main/java/com/example/applocker
-      - run: |
-          cat << 'EOF' > app/src/main/java/com/example/applocker/MainActivity.java
-          package com.example.applocker;
-          import android.app.Activity;
-          import android.os.Bundle;
-          import android.widget.TextView;
-          public class MainActivity extends Activity {
-              @Override protected void onCreate(Bundle b) {
-                  super.onCreate(b);
-                  TextView tv = new TextView(this);
-                  tv.setText("App Locker সফলভাবে তৈরি হয়েছে!");
-                  setContentView(tv);
-              }
-          }
-          EOF
-      - run: |
-          cat << 'EOF' > app/src/main/AndroidManifest.xml
-          <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-              <application android:label="App Locker">
-                  <activity android:name=".MainActivity" android:exported="true">
-                      <intent-filter>
-                          <action android:name="android.intent.action.MAIN" />
-                          <category android:name="android.intent.category.LAUNCHER" />
-                      </intent-filter>
-                  </activity>
-              </application>
-          </manifest>
-          EOF
-      - run: |
-          cat << 'EOF' > app/build.gradle
-          plugins { id 'com.android.application' }
-          android {
-              namespace 'com.example.applocker'
-              compileSdk 33
-              defaultConfig { applicationId "com.example.applocker" }
-          }
-          EOF
-      - run: |
-          cat << 'EOF' > build.gradle
-          buildscript {
-              repositories { google(); mavenCentral() }
-              dependencies { classpath 'com.android.tools.build:gradle:8.1.4' }
-          }
-          allprojects { repositories { google(); mavenCentral() } }
-          EOF
-      - run: |
-          cat << 'EOF' > settings.gradle
-          include ':app'
-          EOF
-      - run: gradle wrapper
-      - run: ./gradlew assembleDebug
-      - uses: actions/upload-artifact@v4
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v3
+
+      - name: Build with Gradle
+        run: ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
           name: MyApp
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: app/build/outputs/apk/debug/app-debug.apkuspusobuatttod
